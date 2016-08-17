@@ -1,8 +1,6 @@
 package com.ryanjbaxter.spring.cloud.ocr.races;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -19,7 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import java.util.ArrayList;
+import java.util.List;
 
 @SpringBootApplication
 @RestController
@@ -31,6 +30,11 @@ public class OcrRacesApplication implements CommandLineRunner {
 	private static List<Race> races = new ArrayList<Race>();
 	@Autowired
 	private ParticipantsBean participantsBean;
+
+	@Bean
+	public ParticipantsClient ParticipantsClientFallback() {
+		return new ParticipantsClientFallback();
+	}
 
     public static void main(String[] args) {
         SpringApplication.run(OcrRacesApplication.class, args);
@@ -73,7 +77,7 @@ class ParticipantsBean {
 	
 	@HystrixCommand(fallbackMethod = "defaultParticipants")
 	public List<Participant> getParticipants(String raceId) {
-		return participantsClient.getParticipants(raceId);
+		return participantsClient.getParticipantsFeignClient(raceId);
 	}
 	
 	public List<Participant> defaultParticipants(String raceId) {
@@ -186,10 +190,18 @@ class Participant {
 	}
 }
 
-@FeignClient("participants")
+@FeignClient(name="participants", fallback = ParticipantsClientFallback.class)
 interface ParticipantsClient {
-	
+
+	//When using Brixton it is important that this method name be different than
+	//the method name of the HystrixCommand that is wrapping it.  Prior to 9.0.1
+	//OpenFeign always used the method name when creating Hystrix Command keys
+	//so since both method names were the same Hystrix thought both circuits were
+	//the same.  This will be fixed in Camden.
 	@RequestMapping(method = RequestMethod.GET, value="/races/{raceId}")
-	List<Participant> getParticipants(@PathVariable("raceId") String raceId);
+	List<Participant> getParticipantsFeignClient(@PathVariable("raceId") String raceId);
+
+
+
 	
 }
