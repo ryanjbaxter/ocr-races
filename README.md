@@ -1,4 +1,6 @@
 # ocr-races
+[![CircleCI](https://circleci.com/gh/ryanjbaxter/ocr-races.svg?style=svg)](https://circleci.com/gh/ryanjbaxter/ocr-races)
+
 Repo for OCR Races service from my [blog](http://ryanjbaxter.com).
 
 ## Running
