@@ -211,7 +211,7 @@ interface ParticipantsClient {
 @RestController
 class MyHealth implements HealthIndicator {
 
-	private boolean healthy = false;
+	private boolean healthy = true;
 
 	@RequestMapping("/healthy")
 	public boolean healthy() {
