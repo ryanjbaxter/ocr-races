@@ -4,6 +4,8 @@ import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
@@ -19,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @SpringBootApplication
 @RestController
@@ -72,11 +76,13 @@ class Sampler {
 
 @Component
 class ParticipantsBean {
+	private static final Logger LOG = Logger.getLogger(ParticipantsBean.class.getName());
 	@Autowired
 	private ParticipantsClient participantsClient;
 	
 	@HystrixCommand(fallbackMethod = "defaultParticipants")
 	public List<Participant> getParticipants(String raceId) {
+		LOG.log(Level.INFO, "Using Feign to get participant data for " + raceId);
 		return participantsClient.getParticipantsFeignClient(raceId);
 	}
 	
@@ -200,8 +206,31 @@ interface ParticipantsClient {
 	//the same.  This will be fixed in Camden.
 	@RequestMapping(method = RequestMethod.GET, value="/races/{raceId}")
 	List<Participant> getParticipantsFeignClient(@PathVariable("raceId") String raceId);
+}
 
+@RestController
+class MyHealth implements HealthIndicator {
 
+	private boolean healthy = false;
 
-	
+	@RequestMapping("/healthy")
+	public boolean healthy() {
+		this.healthy = true;
+		return healthy;
+	}
+
+	@RequestMapping("/sick")
+	public boolean sick() {
+		this.healthy = false;
+		return healthy;
+	}
+
+	@Override
+	public Health health() {
+		if(healthy) {
+			return Health.up().build();
+		} else {
+			return Health.down().build();
+		}
+	}
 }
