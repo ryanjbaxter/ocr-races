@@ -28,7 +28,7 @@ deployment:
       - docker build -t ryanjbaxter/ocr-races .
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push ryanjbaxter/ocr-races
-      -cf push --no-start
-      -cf bind-service ocr-races ocr-eureka
-      -cf bind-service ocr-races ocr-config-server
-      -cf start ocr-races
+      - cf push --no-start
+      - cf bind-service ocr-races ocr-eureka
+      - cf bind-service ocr-races ocr-config-server
+      - cf start ocr-races
