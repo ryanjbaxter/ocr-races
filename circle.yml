@@ -31,4 +31,5 @@ deployment:
       - cf push --no-start
       - cf bind-service ocr-races ocr-eureka
       - cf bind-service ocr-races ocr-config-server
+      - cf set-env ocr-races SPRING_PROFILES_ACTIVE cloud
       - cf start ocr-races
