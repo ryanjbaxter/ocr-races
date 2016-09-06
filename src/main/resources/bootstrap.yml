@@ -1,10 +1,10 @@
 spring:
   application:
     name: races
-    cloud:
-      config:
-        uri:  http://localhost:8888
-        failFast: true
+  cloud:
+    config:
+      uri:  ${vcap.services.ocr-config-server.credentials.uri:http://localhost:8888}
+      failFast: true
 
 
 ---
@@ -15,10 +15,10 @@ spring:
       uri:  http://config:8888
       failFast: true
 
----
-spring:
-  profiles: cloud
-  cloud:
-    config:
-      uri:  ${vcap.services.ocr-config-server.credentials.uri}
-      failFast: true
+#---
+#spring:
+#  profiles: cloud
+#  cloud:
+#    config:
+#      uri:  ${vcap.services.ocr-config-server.credentials.uri}
+#      failFast: true
