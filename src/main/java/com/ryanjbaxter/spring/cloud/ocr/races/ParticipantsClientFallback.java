@@ -11,4 +11,9 @@ public class ParticipantsClientFallback implements ParticipantsClient{
     public List<Participant> getParticipantsFeignClient(String raceId) {
         return new ArrayList<Participant>();
     }
+
+    @Override
+    public List<Participant> getAllParticipantsFeignClient() {
+        return new ArrayList<Participant>();
+    }
 }

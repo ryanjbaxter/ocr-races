@@ -7,7 +7,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -18,11 +20,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @SpringBootApplication
 @RestController
@@ -38,6 +43,12 @@ public class OcrRacesApplication implements CommandLineRunner {
 	@Bean
 	public ParticipantsClient ParticipantsClientFallback() {
 		return new ParticipantsClientFallback();
+	}
+
+	@Bean
+	@LoadBalanced
+	public RestTemplate restTemple() {
+		return new RestTemplateBuilder().build();
 	}
 
     public static void main(String[] args) {
@@ -59,8 +70,21 @@ public class OcrRacesApplication implements CommandLineRunner {
 	@RequestMapping("/participants")
 	public List<RaceWithParticipants> getRacesWithParticipants() {
 		List<RaceWithParticipants> returnRaces = new ArrayList<RaceWithParticipants>();
+		List<Participant> participants = participantsBean.getAllParticipants();
 		for(Race r : races) {
-			returnRaces.add(new RaceWithParticipants(r, participantsBean.getParticipants(r.getId())));
+			returnRaces.add(new RaceWithParticipants(r, participants.stream().filter(
+					participant -> participant.getRaces().contains(r.getId())).collect(Collectors.toList())));
+		}
+		return returnRaces;
+	}
+
+	@RequestMapping("/ribbon-participants")
+	public List<RaceWithParticipants> getRacesWithParticipantsUsingRibbon() {
+		List<RaceWithParticipants> returnRaces = new ArrayList<RaceWithParticipants>();
+		List<Participant> participants = participantsBean.getParticipantsWithRibbon();
+		for(Race r : races) {
+			returnRaces.add(new RaceWithParticipants(r, participants.stream().filter(
+					participant -> participant.getRaces().contains(r.getId())).collect(Collectors.toList())));
 		}
 		return returnRaces;
 	}
@@ -79,14 +103,35 @@ class ParticipantsBean {
 	private static final Logger LOG = Logger.getLogger(ParticipantsBean.class.getName());
 	@Autowired
 	private ParticipantsClient participantsClient;
+
+	@Autowired
+	@LoadBalanced
+	private RestTemplate rest;
 	
 	@HystrixCommand(fallbackMethod = "defaultParticipants")
 	public List<Participant> getParticipants(String raceId) {
 		LOG.log(Level.INFO, "Using Feign to get participant data for " + raceId);
 		return participantsClient.getParticipantsFeignClient(raceId);
 	}
+
+	@HystrixCommand(fallbackMethod = "defaultParticipants")
+	public List<Participant> getAllParticipants() {
+		LOG.log(Level.INFO, "Using Feign to get participant data");
+		return participantsClient.getAllParticipantsFeignClient();
+	}
+
+	public List<Participant> getParticipantsWithRibbon(String raceId) {
+		return Arrays.asList(rest.getForObject("http://participants/races/" + raceId, Participant[].class));
+	}
+
+	public List<Participant> getParticipantsWithRibbon() {
+		return Arrays.asList(rest.getForObject("http://participants/", Participant[].class));
+	}
 	
 	public List<Participant> defaultParticipants(String raceId) {
+		return new ArrayList<Participant>();
+	}
+	public List<Participant> defaultParticipants() {
 		return new ArrayList<Participant>();
 	}
 }
@@ -206,6 +251,9 @@ interface ParticipantsClient {
 	//the same.  This will be fixed in Camden.
 	@RequestMapping(method = RequestMethod.GET, value="/races/{raceId}")
 	List<Participant> getParticipantsFeignClient(@PathVariable("raceId") String raceId);
+
+	@RequestMapping(method = RequestMethod.GET, value="/")
+	List<Participant> getAllParticipantsFeignClient();
 }
 
 @RestController
