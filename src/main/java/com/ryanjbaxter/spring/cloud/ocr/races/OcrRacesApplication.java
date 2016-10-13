@@ -1,6 +1,11 @@
 package com.ryanjbaxter.spring.cloud.ocr.races;
 
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -21,13 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
 @SpringBootApplication
 @RestController
@@ -41,7 +40,7 @@ public class OcrRacesApplication implements CommandLineRunner {
 	private ParticipantsBean participantsBean;
 
 	@Bean
-	public ParticipantsClient ParticipantsClientFallback() {
+	public ParticipantsClientFallback ParticipantsClientFallback() {
 		return new ParticipantsClientFallback();
 	}
 
