@@ -1,2 +1,7 @@
 server:
   port: 8282
+
+# Uncomment to enable the use of a load balanced RestTemplate instead of Feign
+#races:
+#  rest:
+#   enabled: true

@@ -1,47 +1,48 @@
 package com.ryanjbaxter.spring.cloud.ocr.races;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
-import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
 @SpringBootApplication
-@RestController
 @EnableEurekaClient 
 @EnableFeignClients
 @EnableCircuitBreaker
-public class OcrRacesApplication implements CommandLineRunner {
-	
-	private static List<Race> races = new ArrayList<Race>();
-	@Autowired
-	private ParticipantsBean participantsBean;
+public class OcrRacesApplication {
 
 	@Bean
 	public ParticipantsClientFallback ParticipantsClientFallback() {
 		return new ParticipantsClientFallback();
+	}
+
+	@Bean
+	@ConditionalOnProperty(name="races.rest.enabled", havingValue = "false", matchIfMissing = true)
+	public ParticipantsService feignParticipantsService() {
+		return new FeignParticipantsService();
+	}
+
+	@Bean
+	@ConditionalOnProperty(name="races.rest.enabled", havingValue = "true", matchIfMissing = false)
+	public ParticipantsService restParticipantsService(RestTemplate rest) {
+		return new RestParticipantsService(rest);
+	}
+
+	@Bean
+	public RacesService racesService(ParticipantsService participantsService) {
+		return new DefaultRacesService(participantsService);
 	}
 
 	@Bean
@@ -53,40 +54,6 @@ public class OcrRacesApplication implements CommandLineRunner {
     public static void main(String[] args) {
         SpringApplication.run(OcrRacesApplication.class, args);
     }
-
-	@Override
-	public void run(String... arg0) throws Exception {
-		races.add(new Race("Spartan Beast", "123", "MA", "Boston"));
-		races.add(new Race("Tough Mudder RI", "456", "RI", "Providence"));
-	}
-
-	
-	@RequestMapping("/")
-	public List<Race> getRaces() {
-		return races;
-	}
-	
-	@RequestMapping("/participants")
-	public List<RaceWithParticipants> getRacesWithParticipants() {
-		List<RaceWithParticipants> returnRaces = new ArrayList<RaceWithParticipants>();
-		List<Participant> participants = participantsBean.getAllParticipants();
-		for(Race r : races) {
-			returnRaces.add(new RaceWithParticipants(r, participants.stream().filter(
-					participant -> participant.getRaces().contains(r.getId())).collect(Collectors.toList())));
-		}
-		return returnRaces;
-	}
-
-	@RequestMapping("/ribbon-participants")
-	public List<RaceWithParticipants> getRacesWithParticipantsUsingRibbon() {
-		List<RaceWithParticipants> returnRaces = new ArrayList<RaceWithParticipants>();
-		List<Participant> participants = participantsBean.getParticipantsWithRibbon();
-		for(Race r : races) {
-			returnRaces.add(new RaceWithParticipants(r, participants.stream().filter(
-					participant -> participant.getRaces().contains(r.getId())).collect(Collectors.toList())));
-		}
-		return returnRaces;
-	}
 }
 
 @Component
@@ -95,164 +62,6 @@ class Sampler {
 	public AlwaysSampler defaultSampler() {
 		return new AlwaysSampler();
 	}
-}
-
-@Component
-class ParticipantsBean {
-	private static final Logger LOG = Logger.getLogger(ParticipantsBean.class.getName());
-	@Autowired
-	private ParticipantsClient participantsClient;
-
-	@Autowired
-	@LoadBalanced
-	private RestTemplate rest;
-	
-	@HystrixCommand(fallbackMethod = "defaultParticipants")
-	public List<Participant> getParticipants(String raceId) {
-		LOG.log(Level.INFO, "Using Feign to get participant data for " + raceId);
-		return participantsClient.getParticipantsFeignClient(raceId);
-	}
-
-	@HystrixCommand(fallbackMethod = "defaultParticipants")
-	public List<Participant> getAllParticipants() {
-		LOG.log(Level.INFO, "Using Feign to get participant data");
-		return participantsClient.getAllParticipantsFeignClient();
-	}
-
-	public List<Participant> getParticipantsWithRibbon(String raceId) {
-		return Arrays.asList(rest.getForObject("http://participants/races/" + raceId, Participant[].class));
-	}
-
-	public List<Participant> getParticipantsWithRibbon() {
-		return Arrays.asList(rest.getForObject("http://participants/", Participant[].class));
-	}
-	
-	public List<Participant> defaultParticipants(String raceId) {
-		return new ArrayList<Participant>();
-	}
-	public List<Participant> defaultParticipants() {
-		return new ArrayList<Participant>();
-	}
-}
-
-class Race {
-	private String name;
-	private String id;
-	private String state;
-	private String city;
-	
-	public Race(String name, String id, String state, String city) {
-		super();
-		this.name = name;
-		this.id = id;
-		this.state = state;
-		this.city = city;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public String getId() {
-		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
-	}
-	public String getState() {
-		return state;
-	}
-	public void setState(String state) {
-		this.state = state;
-	}
-	public String getCity() {
-		return city;
-	}
-	public void setCity(String city) {
-		this.city = city;
-	}
-}
-
-class RaceWithParticipants extends Race {
-	private List<Participant> participants;
-
-	public RaceWithParticipants(Race r, List<Participant> participants) {
-		super(r.getName(), r.getId(), r.getState(), r.getCity());
-		this.participants = participants;
-	}
-
-	public List<Participant> getParticipants() {
-		return participants;
-	}
-
-	public void setParticipants(List<Participant> participants) {
-		this.participants = participants;
-	}
-}
-
-class Participant {
-	private String firstName;
-	private String lastName;
-	private String homeState;
-	private String shirtSize;
-	private List<String> races;
-	public Participant(String firstName, String lastName, String homeState,
-			String shirtSize, List<String> races) {
-		super();
-		this.firstName = firstName;
-		this.lastName = lastName;
-		this.homeState = homeState;
-		this.shirtSize = shirtSize;
-		this.races = races;
-	}
-	
-	public Participant(){}
-	public String getFirstName() {
-		return firstName;
-	}
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
-	public String getLastName() {
-		return lastName;
-	}
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
-	public String getHomeState() {
-		return homeState;
-	}
-	public void setHomeState(String homeState) {
-		this.homeState = homeState;
-	}
-	public String getShirtSize() {
-		return shirtSize;
-	}
-	public void setShirtSize(String shirtSize) {
-		this.shirtSize = shirtSize;
-	}
-	public List<String> getRaces() {
-		return races;
-	}
-	public void setRaces(List<String> races) {
-		this.races = races;
-	}
-}
-
-@FeignClient(name="participants", fallback = ParticipantsClientFallback.class)
-interface ParticipantsClient {
-
-	//When using Brixton it is important that this method name be different than
-	//the method name of the HystrixCommand that is wrapping it.  Prior to 9.0.1
-	//OpenFeign always used the method name when creating Hystrix Command keys
-	//so since both method names were the same Hystrix thought both circuits were
-	//the same.  This will be fixed in Camden.
-	@RequestMapping(method = RequestMethod.GET, value="/races/{raceId}")
-	List<Participant> getParticipantsFeignClient(@PathVariable("raceId") String raceId);
-
-	@RequestMapping(method = RequestMethod.GET, value="/")
-	List<Participant> getAllParticipantsFeignClient();
 }
 
 @RestController
