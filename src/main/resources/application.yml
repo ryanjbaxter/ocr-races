@@ -5,3 +5,6 @@ server:
 #races:
 #  rest:
 #   enabled: true
+stubrunner:
+  idsToServiceIds:
+    ocr-participants: participants
