@@ -8,3 +8,5 @@ server:
 stubrunner:
   idsToServiceIds:
     ocr-participants: participants
+  ids: 'com.ryanjbaxter.spring.cloud:ocr-participants:+:stubs'
+  repositoryRoot: https://oss.sonatype.org/content/repositories/snapshots

@@ -15,7 +15,7 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureStubRunner(ids = {"com.ryanjbaxter.spring.cloud:ocr-participants:+:stubs"}, workOffline = true)
+@AutoConfigureStubRunner
 @DirtiesContext
 @ActiveProfiles("test")
 public class FeignOcrRacesApplicationTests extends OcrRacesApplicationTestsBase {

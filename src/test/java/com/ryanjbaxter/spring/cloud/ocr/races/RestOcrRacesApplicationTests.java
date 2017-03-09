@@ -15,7 +15,7 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"races.rest.enabled=true"})
-@AutoConfigureStubRunner(ids = {"com.ryanjbaxter.spring.cloud:ocr-participants:+:stubs"}, workOffline = true)
+@AutoConfigureStubRunner
 @DirtiesContext
 @ActiveProfiles("test")
 public class RestOcrRacesApplicationTests extends OcrRacesApplicationTestsBase {
