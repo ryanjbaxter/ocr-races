@@ -1,0 +1,31 @@
+resources:
+- name: ocr_races_sources
+  type: git
+  source:
+    uri: https://github.com/ryanjbaxter/ocr-races.git
+
+jobs:
+- name: build
+  plan:
+  - get: ocr_races_sources
+    trigger: true
+  - task: build
+    config:
+      platform: linux
+      inputs:
+      - name: ocr_races_sources
+      outputs:
+      - name: ocr_races_jar
+      image_resource:
+        type: docker-image
+        source: { repository: openjdk, tag: "8" }
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          export TERM=dumb
+          export SONATYPE_USER={{SONATYPE_USER}}
+          export SONATYPE_PASSWORD={{SONATYPE_PASSWORD}}
+          cd ocr_races_sources
+          ./mvnw deploy -s settings.xml

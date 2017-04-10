@@ -17,6 +17,13 @@ Alternatively you can run this application using the [image](https://hub.docker.
 $ docker run -i -p 8282:8282 ryanjbaxter/ocr-races
 ```
 
+# Concourse CI
+
+To use the Concourse pipeline run
+
+`$ fly -t local set-pipeline --pipeline ocr-races --config ci/pipelines/ocr-races.yml --var "SONATYPE_USER=username" --var "SONATYPE_PASSWORD=password`
+
+
 ## Using
 This service has 2 API endpoints
 
