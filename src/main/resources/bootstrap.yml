@@ -6,6 +6,10 @@ spring:
       uri:  ${vcap.services.ocr-config-server.credentials.uri:http://localhost:8888}
       failFast: true
 
+troublemaker:
+  client:
+    token: abc123
+
 ---
 spring:
   profiles: docker

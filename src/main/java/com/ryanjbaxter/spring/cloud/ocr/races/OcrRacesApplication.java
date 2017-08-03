@@ -17,11 +17,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import com.keyholesoftware.troublemaker.client.EnableTroubleMaker;
 
 @SpringBootApplication
 @EnableEurekaClient 
 @EnableFeignClients
 @EnableCircuitBreaker
+@EnableTroubleMaker
 public class OcrRacesApplication {
 
 	@Bean
