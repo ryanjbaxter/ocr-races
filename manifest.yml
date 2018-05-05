@@ -1,6 +1,6 @@
 ---
 applications:
 - name: ocr-races
-  memory: 512M
+  memory: 1024M
   path: target/ocr-races-0.0.2-SNAPSHOT.jar
   host: ocr-races-cf
