@@ -11,3 +11,4 @@ stubrunner:
   ids: 'com.ryanjbaxter.spring.cloud:ocr-participants:+:stubs'
   repositoryRoot: https://oss.sonatype.org/content/repositories/snapshots/
   stubs-mode: remote
+  snapshot-check-skip: true
