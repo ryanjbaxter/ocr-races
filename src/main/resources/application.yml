@@ -12,3 +12,8 @@ stubrunner:
   repositoryRoot: https://oss.sonatype.org/content/repositories/snapshots/
   stubs-mode: remote
   snapshot-check-skip: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
