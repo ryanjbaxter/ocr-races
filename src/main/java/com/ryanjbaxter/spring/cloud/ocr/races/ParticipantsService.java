@@ -1,6 +1,8 @@
 package com.ryanjbaxter.spring.cloud.ocr.races;
 
 
+import reactor.core.publisher.Flux;
+
 import java.util.List;
 
 /**
@@ -8,9 +10,9 @@ import java.util.List;
  */
 public interface ParticipantsService {
 
-	public List<Participant> getAllParticipants();
+	public Flux<Participant> getAllParticipants();
 
-	public List<Participant> getParticipants(String raceId);
+	public Flux<Participant> getParticipants(String raceId);
 }
 
 class Participant {

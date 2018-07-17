@@ -1,5 +1,7 @@
 package com.ryanjbaxter.spring.cloud.ocr.races;
 
+import reactor.core.publisher.Flux;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,8 +41,8 @@ public class OcrRacesApplicationTestsBase {
 
 	@Test
 	public void contextLoads() {
-		List<Participant> participantList = participantsService.getAllParticipants();
-		assertEquals(participants, participantList);
+		Flux<Participant> participantList = participantsService.getAllParticipants();
+		assertEquals(participants, participantList.collectList().block());
 	}
 
 }

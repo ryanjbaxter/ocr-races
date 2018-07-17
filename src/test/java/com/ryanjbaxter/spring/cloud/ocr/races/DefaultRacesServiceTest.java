@@ -1,5 +1,7 @@
 package com.ryanjbaxter.spring.cloud.ocr.races;
 
+import reactor.core.publisher.Flux;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -53,13 +55,13 @@ public class DefaultRacesServiceTest {
 	@Test
 	public void getAllRacesTest() {
 		DefaultRacesService racesService = new DefaultRacesService(participantsService);
-		assertEquals(races, racesService.getAllRaces());
+		assertEquals(races, racesService.getAllRaces().collectList().block());
 	}
 
 	@Test
 	public void getAllRacesWithParticipantsTest() {
-		doReturn(participants).when(participantsService).getAllParticipants();
+		doReturn(Flux.fromIterable(participants)).when(participantsService).getAllParticipants();
 		DefaultRacesService racesService = new DefaultRacesService(participantsService);
-		assertEquals(raceWithParticipants, racesService.getAllRacesWithParticipants());
+		assertEquals(raceWithParticipants, racesService.getAllRacesWithParticipants().collectList().block());
 	}
 }

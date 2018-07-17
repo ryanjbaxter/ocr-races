@@ -1,5 +1,7 @@
 package com.ryanjbaxter.spring.cloud.ocr.races;
 
+import reactor.core.publisher.Flux;
+
 import java.util.List;
 
 /**
@@ -7,9 +9,9 @@ import java.util.List;
  */
 public interface RacesService {
 
-	public List<Race> getAllRaces();
+	public Flux<Race> getAllRaces();
 
-	public List<RaceWithParticipants> getAllRacesWithParticipants();
+	public Flux<RaceWithParticipants> getAllRacesWithParticipants();
 }
 
 class Race {
@@ -74,19 +76,24 @@ class Race {
 }
 
 class RaceWithParticipants extends Race {
-	private List<Participant> participants;
+	private Flux<Participant> participants;
 
 	public RaceWithParticipants(Race r, List<Participant> participants) {
+		super(r.getName(), r.getId(), r.getState(), r.getCity());
+		this.participants = Flux.fromIterable(participants);
+	}
+
+	public RaceWithParticipants(Race r, Flux<Participant> participants) {
 		super(r.getName(), r.getId(), r.getState(), r.getCity());
 		this.participants = participants;
 	}
 
-	public List<Participant> getParticipants() {
+	public Flux<Participant> getParticipants() {
 		return participants;
 	}
 
 	public void setParticipants(List<Participant> participants) {
-		this.participants = participants;
+		this.participants = Flux.fromIterable(participants);
 	}
 
 	@Override
@@ -97,7 +104,7 @@ class RaceWithParticipants extends Race {
 
 		RaceWithParticipants that = (RaceWithParticipants) o;
 
-		return getParticipants().equals(that.getParticipants());
+		return getParticipants().collectList().block().equals(that.getParticipants().collectList().block());
 	}
 
 	@Override

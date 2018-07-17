@@ -10,6 +10,12 @@ troublemaker:
   client:
     token: abc123
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
 ---
 spring:
   profiles: docker

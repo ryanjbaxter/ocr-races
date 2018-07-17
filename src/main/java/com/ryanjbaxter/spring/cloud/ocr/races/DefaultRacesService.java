@@ -1,8 +1,9 @@
 package com.ryanjbaxter.spring.cloud.ocr.races;
 
+import reactor.core.publisher.Flux;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Ryan Baxter
@@ -19,18 +20,18 @@ public class DefaultRacesService implements RacesService {
 	}
 
 	@Override
-	public List<Race> getAllRaces() {
-		return races;
+	public Flux<Race> getAllRaces() {
+		return Flux.fromIterable(races);
 	}
 
 	@Override
-	public List<RaceWithParticipants> getAllRacesWithParticipants() {
+	public Flux<RaceWithParticipants> getAllRacesWithParticipants() {
 		List<RaceWithParticipants> returnRaces = new ArrayList<RaceWithParticipants>();
-		List<Participant> participants = participantsService.getAllParticipants();
+		Flux<Participant> participants = participantsService.getAllParticipants();
+
 		for(Race r : races) {
-			returnRaces.add(new RaceWithParticipants(r, participants.stream().filter(
-					participant -> participant.getRaces().contains(r.getId())).collect(Collectors.toList())));
+			returnRaces.add(new RaceWithParticipants(r, participants.filter(p -> p.getRaces().contains(r.getId()))));
 		}
-		return returnRaces;
+		return Flux.fromIterable(returnRaces);
 	}
 }

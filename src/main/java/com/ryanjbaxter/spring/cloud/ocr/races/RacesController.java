@@ -1,8 +1,7 @@
 package com.ryanjbaxter.spring.cloud.ocr.races;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import reactor.core.publisher.Flux;
+
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,12 +18,12 @@ public class RacesController {
 	}
 
 	@RequestMapping("/")
-	public List<Race> getRaces() {
+	public Flux<Race> getRaces() {
 		return racesService.getAllRaces();
 	}
 
 	@RequestMapping("/participants")
-	public List<RaceWithParticipants> getRacesWithParticipants() {
+	public Flux<RaceWithParticipants> getRacesWithParticipants() {
 		return racesService.getAllRacesWithParticipants();
 	}
 

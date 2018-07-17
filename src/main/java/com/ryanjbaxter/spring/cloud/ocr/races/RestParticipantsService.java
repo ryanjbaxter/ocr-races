@@ -1,27 +1,28 @@
 package com.ryanjbaxter.spring.cloud.ocr.races;
 
-import java.util.Arrays;
+import reactor.core.publisher.Flux;
+
 import java.util.List;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * @author Ryan Baxter
  */
 public class RestParticipantsService implements ParticipantsService {
 
-	private RestTemplate rest;
+	private WebClient.Builder builder;
 
-	public RestParticipantsService(RestTemplate rest) {
-		this.rest = rest;
+	public RestParticipantsService(WebClient.Builder builder) {
+		this.builder = builder;
 	}
 
 	@Override
-	public List<Participant> getAllParticipants() {
-		return Arrays.asList(rest.getForObject("http://participants/", Participant[].class));
+	public Flux<Participant> getAllParticipants() {
+		return builder.baseUrl("http://participants").build().get().retrieve().bodyToFlux(Participant.class);
 	}
 
 	@Override
-	public List<Participant> getParticipants(String raceId) {
-		return Arrays.asList(rest.getForObject("http://participants/races/" + raceId, Participant[].class));
+	public Flux<Participant> getParticipants(String raceId) {
+		return builder.baseUrl("http://participants").build().get().retrieve().bodyToFlux(Participant.class);
 	}
 }

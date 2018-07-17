@@ -1,6 +1,7 @@
 package com.ryanjbaxter.spring.cloud.ocr.races;
 
-import java.util.List;
+import reactor.core.publisher.Flux;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -16,12 +17,12 @@ public class FeignParticipantsService implements ParticipantsService {
 	}
 
 	@Override
-	public List<Participant> getAllParticipants() {
-		return client.getAllParticipantsFeignClient();
+	public Flux<Participant> getAllParticipants() {
+		return Flux.fromIterable(client.getAllParticipantsFeignClient());
 	}
 
 	@Override
-	public List<Participant> getParticipants(String raceId) {
-		return client.getParticipantsFeignClient(raceId);
+	public Flux<Participant> getParticipants(String raceId) {
+		return Flux.fromIterable(client.getParticipantsFeignClient(raceId));
 	}
 }

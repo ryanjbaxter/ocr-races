@@ -5,16 +5,13 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import com.keyholesoftware.troublemaker.client.EnableTroubleMaker;
 
 @SpringBootApplication
@@ -36,8 +33,8 @@ public class OcrRacesApplication {
 
 	@Bean
 	@ConditionalOnProperty(name="races.rest.enabled", havingValue = "true", matchIfMissing = false)
-	public ParticipantsService restParticipantsService(RestTemplate rest) {
-		return new RestParticipantsService(rest);
+	public ParticipantsService restParticipantsService(WebClient.Builder builder) {
+		return new RestParticipantsService(builder);
 	}
 
 	@Bean
@@ -47,8 +44,9 @@ public class OcrRacesApplication {
 
 	@Bean
 	@LoadBalanced
-	public RestTemplate restTemple() {
-		return new RestTemplateBuilder().build();
+	public WebClient.Builder webClientBuilder() {
+		WebClient.Builder builder = WebClient.builder();
+		return builder;
 	}
 
     public static void main(String[] args) {
